@@ -1,0 +1,372 @@
+
+:root {
+    --navy-blue: #1e3a8a;      /* navy blue*/
+    --dark-navy: #1e40af;      /* Darker navy for hover effects */
+    --light-navy: #3b82f6;     /* Lighter navy for accents */
+    --gold-accent: #fbbf24;    /* Gold color for ratings and premium features */
+    --white: #ffffff;          /* Pure white for text and backgrounds */
+    --light-gray: #f8fafc;     /* Light gray for subtle backgrounds */
+    --medium-gray: #64748b;    /* Medium gray for secondary text */
+    --dark-gray: #334155;      /* Dark gray for borders and dividers */
+}
+
+/*base styles*/
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    background-color: var(--light-gray);
+    color: var(--dark-gray);
+    line-height: 1.6;
+}
+
+/*header styles: logo and user status*/
+
+.header {
+    background-color: var(--navy-blue);
+    color: var(--white);
+    padding: 1rem 0;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.header-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--white);
+}
+
+/* User info section - demonstrates LaunchDarkly user context targeting */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+#user-status {
+    font-weight: 600;
+    padding: 0.5rem 1rem;
+    background-color: var(--light-navy);
+    border-radius: 20px;
+    font-size: 0.9rem;
+}
+
+/* User toggle button - triggers context changes for targeting demo */
+.user-toggle {
+    background-color: var(--gold-accent);
+    color: var(--navy-blue);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.user-toggle:hover {
+    background-color: #f59e0b; /* Darker gold on hover */
+}
+
+/* =================================================================
+   MAIN CONTENT AREA
+   ================================================================= */
+
+.main-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem;
+}
+
+/* Controls section with view switching buttons */
+.controls {
+    margin-bottom: 2rem;
+}
+
+.controls h2 {
+    color: var(--navy-blue);
+    margin-bottom: 1rem;
+    font-size: 1.8rem;
+}
+
+/* View controls - demonstrate layout feature flag switching */
+.view-controls {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.view-btn {
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--navy-blue);
+    background-color: transparent;
+    color: var(--navy-blue);
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.view-btn:hover {
+    background-color: var(--navy-blue);
+    color: var(--white);
+}
+
+/* Active state for currently selected view */
+.view-btn.active {
+    background-color: var(--navy-blue);
+    color: var(--white);
+}
+
+/* =================================================================
+   MOVIE CONTAINER LAYOUTS
+   These classes change based on LaunchDarkly layout feature flag
+   ================================================================= */
+
+/* Grid Layout - Default view showing movie posters in a grid */
+.movie-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 2rem;
+    transition: all 0.3s ease; /* Smooth transition when switching layouts */
+}
+
+/* List Layout - Alternative view controlled by feature flag */
+.movie-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    transition: all 0.3s ease; /* Smooth transition when switching layouts */
+}
+
+/* =================================================================
+   MOVIE CARD STYLES
+   Individual movie cards that display different content based on flags
+   ================================================================= */
+
+/* Base movie card styles - used in both grid and list views */
+.movie-card {
+    background-color: var(--white);
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+}
+
+.movie-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Grid view specific card styling */
+.movie-grid .movie-card {
+    display: flex;
+    flex-direction: column;
+}
+
+/* List view specific card styling - horizontal layout */
+.movie-list .movie-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 1rem;
+}
+
+/* Movie poster image styling */
+.movie-poster {
+    width: 100%;
+    height: 300px;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+/* List view poster sizing */
+.movie-list .movie-poster {
+    width: 120px;
+    height: 180px;
+    margin-right: 1rem;
+    border-radius: 5px;
+}
+
+/* Movie information section */
+.movie-info {
+    padding: 1rem;
+    flex: 1;
+}
+
+.movie-title {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--navy-blue);
+    margin-bottom: 0.5rem;
+}
+
+.movie-year {
+    color: var(--medium-gray);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+}
+
+/* =================================================================
+   RATING SYSTEM STYLES
+   These change based on the rating system feature flag
+   ================================================================= */
+
+/* Rating container - content changes based on rating-system flag */
+.movie-rating {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+/* Star rating system - shown when rating-system flag = "stars" */
+.star-rating {
+    display: flex;
+    gap: 2px;
+}
+
+.star {
+    color: var(--gold-accent);
+    font-size: 1.2rem;
+}
+
+/* Point rating system - shown when rating-system flag = "points" */
+.point-rating {
+    background-color: var(--navy-blue);
+    color: var(--white);
+    padding: 0.3rem 0.8rem;
+    border-radius: 15px;
+    font-weight: bold;
+    font-size: 0.9rem;
+}
+
+/* =================================================================
+   POSTER SELECTION FEATURE
+   Premium feature controlled by poster selection feature flag
+   ================================================================= */
+
+/* Poster selection container - only visible for premium users */
+.poster-selection {
+    margin-top: 1rem;
+    padding: 1rem;
+    background-color: var(--light-gray);
+    border-radius: 8px;
+    border: 2px solid var(--gold-accent);
+}
+
+.poster-selection h4 {
+    color: var(--navy-blue);
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+/* Poster options grid */
+.poster-options {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.poster-option {
+    width: 100%;
+    height: 60px;
+    object-fit: cover;
+    border-radius: 4px;
+    cursor: pointer;
+    border: 2px solid transparent;
+    transition: border-color 0.3s ease;
+}
+
+.poster-option:hover,
+.poster-option.selected {
+    border-color: var(--gold-accent);
+}
+
+/* Premium badge for premium features */
+.premium-badge {
+    background-color: var(--gold-accent);
+    color: var(--navy-blue);
+    padding: 0.2rem 0.6rem;
+    border-radius: 10px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    margin-left: 0.5rem;
+}
+
+/* =================================================================
+   RESPONSIVE DESIGN
+   Ensures the demo looks good on different screen sizes
+   ================================================================= */
+
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 1rem;
+        text-align: center;
+    }
+    
+    .main-content {
+        padding: 1rem;
+    }
+    
+    .movie-grid {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 1rem;
+    }
+    
+    .movie-list .movie-card {
+        flex-direction: column;
+        text-align: center;
+    }
+    
+    .movie-list .movie-poster {
+        width: 100%;
+        height: 200px;
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+}
+
+/* List view specific poster selection styling */
+.movie-list .poster-selection {
+    width: 100%;
+    min-width: 300px; /* Ensure enough space for poster options */
+}
+
+.movie-list .poster-options {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+}
+
+.movie-list .poster-option {
+    height: 40px; /* Smaller height for list view */
+}
+
+/* =================================================================
+   EXPERIMENTATION - Enhanced Poster Selection
+   ================================================================= */
+
+/* Enhanced poster options for A/B testing */
+.large-posters .poster-option {
+    height: 120px !important;
+    width: 140% !important;
+}
+
+/* Ensure enhanced posters still fit in grid */
+.large-posters {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.8rem;
+}
