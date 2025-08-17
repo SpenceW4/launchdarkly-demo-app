@@ -1,4 +1,4 @@
-# LaunchDarkly Movie App Demo - Solutions Engineer Technical Exercise
+# LaunchDarkly Movie App Demo - Solutions Engineer Technical HW
 
 A movie review demo app to showcase LaunchDarkly's feature flags, targeting, and experimentation features for my SE technical interview homework.
 
