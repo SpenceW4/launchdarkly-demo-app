@@ -177,6 +177,6 @@ variations based on rules and you can toggle the rule between 'list' and 'grid' 
 
 ## Authors
 
-Spencer Wright - Solutions Engineer Technical Exercise
+Spencer Wright - Solutions Engineer Technical HW
 * Email: spencer13wright@gmail.com
 * LinkedIn: https://www.linkedin.com/in/spencerwright4/
