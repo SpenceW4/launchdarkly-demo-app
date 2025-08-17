@@ -1,27 +1,25 @@
-/* =================================================================
-   CINEFLAG - MOVIE FLAGS JAVASCRIPT
-   LaunchDarkly Feature Flag Integration for Movie Review Demo
-   ================================================================= */
+//store ld client id - get this from the project settings 
+//key is like a pw that connects directly to project on LD
+//IMPORTANT TODO - if you are recreating the LauncDarkly Project please replace this key
 
-// LaunchDarkly Client-side ID - connects this app to your LaunchDarkly project
-// This key identifies your specific LaunchDarkly environment (Test environment)
-// IMPORTANT: Replace this key if you recreate the LaunchDarkly project
 const LAUNCHDARKLY_CLIENT_ID = '689fad12b1c0dd098ae7fd25';
 
-// Global LaunchDarkly client variable - will be initialized when app loads
+
+//this is what is going hold my LD connection 
 let ldClient;
 
-// Current user context - starts as basic user, can be changed for targeting demo
-//note: individual targeting would be good for testing and special cases,less scalable in comparison to rule based
+//create user object , starts as basic user, can be changed for targeting demo
+//LD note: individual targeting would be good for testing and special cases,less scalable in comparison to rule based
+
 let currentUser = { //this is where if we want to target an individual or a group we would use their key right now this key is spencer13wirght's email
     kind: 'user',
     key: 'spencer13wright@gmail.com',
     name: 'Spencer Wright',
-    subscription: 'basic',  // This attribute controls premium feature targeting
-    preferredGenre: 'action' // This attribute can be used for content targeting
+    subscription: 'basic',  //this attribute controls premium feature targeting
+    preferredGenre: 'action' //this attribute can be used for content targeting - ended up not using this with the feature flags i created 
 };
 
-// Movie database - your selected films with poster URLs and ratings
+//create arrays of my movies to use 
 const movies = [
     {
         title: 'Past Lives',
@@ -51,7 +49,7 @@ const movies = [
         ],
 
 
-        rating: 5.0,
+        rating: 5,
         genre: 'action'
     },
 
@@ -112,7 +110,7 @@ const movies = [
 
 
         ],
-        rating: 4.7,
+        rating: 4,
         genre: 'drama'
     },
     {
@@ -126,7 +124,7 @@ const movies = [
             'https://i.ebayimg.com/00/s/MTYwMFgxMDY2/z/-lYAAOSwyOllr9-S/$_57.JPG?set_id=880000500F',
 
         ],
-        rating: 4.3,
+        rating: 4,
         genre: 'drama'
     },
     {
@@ -140,7 +138,7 @@ const movies = [
             'https://m.media-amazon.com/images/M/MV5BOTc2MGZjZTQtODBlZi00NDQ4LTg1M2YtMmI2NWIxNGU3YzA2XkEyXkFqcGc@._V1_.jpg',
 
         ],
-        rating: 4.0,
+        rating: 4,
         genre: 'drama'
     },
     {
@@ -155,7 +153,7 @@ const movies = [
 
 
         ],
-        rating: 4.2,
+        rating: 4,
         genre: 'drama'
     },
     {
@@ -169,195 +167,204 @@ const movies = [
             'https://i.pinimg.com/736x/0e/8e/27/0e8e27a2eb85825dff6fe272ddd2f648.jpg',
 
         ],
-        rating: 4.4,
+        rating: 4,
         genre: 'action'
     }
 ];
 
-/* =================================================================
-   LAUNCHDARKLY INITIALIZATION
-   This section handles connecting to LaunchDarkly and setting up
-   real-time feature flag updates
-   ================================================================= */
 
-/**
- * Initialize LaunchDarkly client and set up feature flag listeners
- * This function runs when the page loads
- */
-async function initializeLaunchDarkly() {
+//this section is going to handle connecting to LD and setting up real-time flag updates
+
+
+async function initializeLaunchDarkly() { //create a function that will wait for things to finish (connecting to LD server)
+    
     try {
-        console.log('🚀 Initializing LaunchDarkly client...');
+
+        console.log('Starting/Initializing LaunchDarkly client...');
         
-        // Initialize the LaunchDarkly client with our project key and user context
-        // The user context tells LaunchDarkly who is using the app for targeting
+        //takes our vb from earlier and fill it with the actual connection using our key and the user
+        //this is what actaully connects our project (in LD) to our code
         ldClient = LDClient.initialize(LAUNCHDARKLY_CLIENT_ID, currentUser);
-        
-        // Wait for the client to be ready before evaluating flags
-        // This ensures we have the latest flag values from LaunchDarkly's servers
+
+        //pause and wait until LD fully connects and then download all flag settings before continuing
+        //this runs everytime page is refreshed to make sure all flags and content are up to date
         await ldClient.waitForInitialization();
         
-        console.log('✅ LaunchDarkly client initialized successfully');
+        console.log('LaunchDarkly client connected successfully');//reaches here then we're good to move forward
         
-        // Set up real-time listeners for each feature flag
-        // These listeners enable instant updates when flags change in the dashboard
+        //this is what is listenting for the toggle switch in LD dashboard 
         setupFlagListeners();
         
-        // Render the initial state of the application
+        //display all the movies on the page when app first loads
         renderMovies();
+
+        //update all UI elements based on the  current flag values
         updateUIBasedOnFlags();
         
     } catch (error) {
-        console.error('❌ Error initializing LaunchDarkly:', error);
-        // Fallback: render movies with default settings if LaunchDarkly fails
+        console.error('Error connecting to LaunchDarkly:', error);
+        
+        //if ld connection fails still show the movies with default settings so that the app doesnt just break
+        //ran into this a few tiems, easier to just reload the page
         renderMovies();
     }
 }
 
-/**
- * Set up real-time listeners for all feature flags
- * These listeners trigger UI updates instantly when flags change
- */
+
+//setting up functions to update the ui when a flag changes, NOTE: the instant real time is a feature of LD's system
 function setupFlagListeners() {
-    console.log('🔄 Setting up real-time flag listeners...');
+
+    console.log('Setting up real-time flag listeners...'); //console msg
     
-    // Listener for layout switching (grid vs list view)
-    // Fires instantly when 'movie-layout-style' flag changes in LaunchDarkly dashboard
+    
+    //listen for when this flag changes, we're gonna change the layout,, do this for each flag
     ldClient.on('change:movie-layout-style2', () => {
-        console.log('📱 Layout flag changed - updating view');
-        updateLayoutView();
+
+        console.log('Layout flag changed - updating view!');
+
+        updateLayoutView(); //call update function to actual update the view 
     });
     
-    // Listener for rating system switching (stars vs points)
-    // Fires instantly when 'rating-system' flag changes in LaunchDarkly dashboard
+    //listen for when the rating system change 
+
     ldClient.on('change:rating-system', () => {
-        console.log('⭐ Rating system flag changed - updating ratings');
-        updateRatingSystem();
+
+        console.log('Rating system flag changed - updating ratings!'); //msg
+
+        updateRatingSystem(); //call func to change the system
     });
     
-    // Listener for poster selection feature (premium vs basic)
-    // Fires instantly when 'poster-selection' flag changes
+    
+    //listen for when poster selection flag changes
     ldClient.on('change:poster-selection', () => {
-        console.log('🖼️ Poster selection flag changed - updating premium features');
-        renderMovies();
+
+        console.log('Poster selection flag changed - updating poster feature!');
+
+        renderMovies(); //reload all movies so we can show/hide the poster selection feature
     });
 }
 
-/* =================================================================
-   FEATURE FLAG EVALUATION FUNCTIONS
-   These functions check current flag values and update the UI
-   ================================================================= */
 
-/**
- * Update all UI elements based on current feature flag values
- */
-function updateUIBasedOnFlags() {
+
+//update all ui elements based on current flag values 
+//these functions check current flag values and update the UI
+
+function updateUIBasedOnFlags() { //big update to call all those functions at once
+    //used for when app first loads, to make sure everything is set up correctly
+
     updateLayoutView();
     updateRatingSystem();
     updatePosterSelection();
 }
 
-/**
- * Update the movie layout based on the layout feature flag
- * Flag: 'movie-layout-style' - controls grid vs list view
- */
+//updating the movie layout view 
+
 function updateLayoutView() {
-    if (!ldClient) return;
+
+    if (!ldClient) return; //if LD isnt connected just stop here but DO NOT crash
     
-    // Evaluate the layout flag - returns 'grid' or 'list'
+    
     const layoutStyle = ldClient.variation('movie-layout-style2', 'grid');
-    console.log(`📐 Current layout: ${layoutStyle}`);
+    //if it cant connect use grid as the backup otherwise ask for the layout style from the flag
+    //variation built in LD to ask what a flags value should be for the current user
+
+    console.log(`Current layout: ${layoutStyle}`); //show layout in console
     
-    const container = document.getElementById('movie-container');
-    const gridBtn = document.getElementById('grid-view');
-    const listBtn = document.getElementById('list-view');
-    
-    // Update CSS classes and button states based on flag value
-    if (layoutStyle === 'list') {
-        container.className = 'movie-list';
-        gridBtn.classList.remove('active');
-        listBtn.classList.add('active');
-    } else {
-        container.className = 'movie-grid';
+    const container = document.getElementById('movie-container'); //grab the html that holds all the movies
+
+    const gridBtn = document.getElementById('grid-view'); 
+    const listBtn = document.getElementById('list-view'); 
+    //grab the grid and list buttons from the webpage, buttons dont actually do anything but this is for display
+    //we'll just update the appearance 
+
+    //now we pdate css classes and button states based on the flag's value
+
+    if (layoutStyle === 'list') { //if value from LD is list - this is in the LD variations section for the flag, to check the value 
+
+        container.className = 'movie-list'; //grab the movie list layout from css
+        gridBtn.classList.remove('active'); //make it gray and 'unclickable'
+        listBtn.classList.add('active'); //make it look active/clickable
+
+    } else { //could also add different layouts and make this if else === grid
+
+        container.className = 'movie-grid'; //grab the movie grid layout from css
         gridBtn.classList.add('active');
         listBtn.classList.remove('active');
     }
 }
 
-/**
- * Update rating display based on rating system feature flag
- * Flag: 'rating-system' - controls star vs point ratings
- */
+//update rating system
+
 function updateRatingSystem() {
-    if (!ldClient) return;
+
+    if (!ldClient) return; //if LD isnt connected then just stop here and dont crash
     
-    // Evaluate the rating system flag - returns 'stars' or 'points'
-    const ratingSystem = ldClient.variation('rating-system', 'stars');
-    console.log(`⭐ Current rating system: ${ratingSystem}`);
+    const ratingSystem = ldClient.variation('rating-system', 'stars'); //check flag value for rating system
+    //defauly if things crash and go wrong, then make it stars
+
+    console.log(`Current rating system: ${ratingSystem}`); //console msg
     
-    // Re-render movies to apply new rating system
-    renderMovies();
+   
+    renderMovies(); //reload the iages to apply the new rating system
 }
 
-/**
- * Update poster selection feature based on premium feature flag
- * Flag: 'poster-selection' - controls premium poster selection
- */
+//update poster selection feature
+
 function updatePosterSelection() {
-    if (!ldClient) return;
+
+    if (!ldClient) return; //if LD doesnt connect then return and dont crash
     
-    // Evaluate the poster selection flag - returns true/false
-    const posterSelectionEnabled = ldClient.variation('poster-selection', false);
-    console.log(`🖼️ Poster selection enabled: ${posterSelectionEnabled}`);
+    const posterSelectionEnabled = ldClient.variation('poster-selection', false); //check the flag value for poster selection
+    //make default false meaning dont show the feature to select posters
+
+    console.log(`Poster selection enabled: ${posterSelectionEnabled}`); //console msg
     
-    // Show/hide poster selection based on flag AND user subscription
-    const showPosterSelection = posterSelectionEnabled;
+    const showPosterSelection = posterSelectionEnabled; //copy flag name
     
-    // Update all poster selection elements
-    const posterSelections = document.querySelectorAll('.poster-selection');
-    posterSelections.forEach(selection => {
+    const posterSelections = document.querySelectorAll('.poster-selection'); //grab all elements on the page that have poster selection
+    //this is my choose poster sections
+
+    posterSelections.forEach(selection => { //each item if the flag is true show it if its not dont
+
         selection.style.display = showPosterSelection ? 'block' : 'none';
+
     });
 }
 
-/* =================================================================
-   MOVIE RENDERING FUNCTIONS
-   These functions generate the HTML for movie cards
-   ================================================================= */
+//update/reload movie posters in its container
 
-/**
- * Render all movies in the container
- */
 function renderMovies() {
-    const container = document.getElementById('movie-container');
+
+    const container = document.getElementById('movie-container'); //grab the html element where all the movies will be displayed
     
-    // Generate HTML for all movie cards
-    const moviesHTML = movies.map(movie => createMovieCard(movie)).join('');
+    const moviesHTML = movies.map(movie => createMovieCard(movie)).join(''); //go through each movie in movie array and create html for each one w createmoviecard func
     container.innerHTML = moviesHTML;
+    //then combine all html into one big string, take the string and replace whatever was there before
     
-    // Update poster selection after rendering
-    updatePosterSelection();
+    updatePosterSelection(); //update the poster selection after the movies are displayed, check the poster selectoin flag and show/hide
+    //accordingly, therefore all movies appear on webpage with current flag settings applied 
 }
 
-/**
- * Create HTML for a single movie card
- * Content varies based on active feature flags
- */
+
+//create html for movie card 
+
 function createMovieCard(movie) {
-    // Get current rating system from feature flag
-    const ratingSystem = ldClient ? ldClient.variation('rating-system', 'stars') : 'stars';
     
-    // Generate rating HTML based on current flag value
+    const ratingSystem = ldClient ? ldClient.variation('rating-system', 'stars') : 'stars';
+    //grab the current flag value (starts or numbers for rating system) , if anyhting happens put stars as default
+    
+    //whatever flag value is, create the html with that type of rating 
     const ratingHTML = generateRatingHTML(movie.rating, ratingSystem);
     
-    // Check if poster selection should be shown
+    //check flag and if flag is true then show but the default is false
     const showPosterSelection = ldClient && 
-                               ldClient.variation('poster-selection', false);
+                               ldClient.variation('poster-selection', false); //client must be connected and flag is on
+                               //poster selection is whatever the variation value is, false is safety net
  
-    // Get experiment variant for A/B testing - ADD THIS FOR EXPERIMENTATION
+    //check poster size from LD flag, small defualy
     const experimentVariant = ldClient ? ldClient.variation('poster-experiment', 'small') : 'small';
-    //check and see what LD is using/giving by defaullt, and then also if anything crashes we go back to small
     
-    // Generate poster selection HTML for premium users
+    //ff poster selection is enabled AND movie has alteranative posters create the html for poster selection
     const posterSelectionHTML = showPosterSelection && movie.alternativePosters ? `
     <div class="poster-selection">
         <h4>Choose Poster <span class="premium-badge">PREMIUM</span></h4>
@@ -369,10 +376,12 @@ function createMovieCard(movie) {
     </div>
 ` : '';
 
+//select poster based on if clicked
+
 // above adding ${experimentVariant === 'larged' ? 'large-posters' : ''}"> for experiementation, remove if any issues 
 //if the experiement is saying large then add the large posters css) class
-    
-    return `
+    //below combine everything into a presentable movie card
+    return ` 
         <div class="movie-card">
             <img src="${movie.poster}" alt="${movie.title}" class="movie-poster">
             <div class="movie-info">
@@ -387,133 +396,127 @@ function createMovieCard(movie) {
     `;
 }
 
-/**
- * Generate rating HTML based on the current rating system flag
- */
+//generate rating html based on system flag
+
 function generateRatingHTML(rating, system) {
-    if (system === 'points') {
-        // Points system: show rating out of 10
-        const pointRating = Math.round(rating); // Convert 4.5 to 9/10
-        return `<span class="point-rating">${pointRating}/5</span>`;
+
+    if (system === 'points') { //if flag value is point system
+        
+        const pointRating = Math.round(rating); // convert to whole number
+
+        return `<span class="point-rating">${pointRating}/5</span>`; //input the rating into the display
+
     } else {
+
         // Star system: show filled and empty stars
-        const fullStars = Math.floor(rating);
-        const hasHalfStar = rating % 1 >= 0.5;
+        const fullStars = Math.floor(rating); //changed these so not super necessary to have
+        const hasHalfStar = rating % 1 >= 0.5; //same with this
         
-        let starsHTML = '<div class="star-rating">';
+        let starsHTML = '<div class="star-rating">'; //start building the HTML string 
         
-        // Add full stars
+        //adding stars
         for (let i = 0; i < fullStars; i++) {
-            starsHTML += '<span class="star">★</span>';
+            starsHTML += '<span class="star">★</span>'; //loopfor howeery many stars there are
         }
         
-        // Add half star if needed
+        //tried to add haflt star, didnt work , come back to this?
         if (hasHalfStar && fullStars < 5) {
             starsHTML += '<span class="star">☆</span>';
         }
         
-        // Add empty stars to complete 5 stars
-        for (let i = fullStars + (hasHalfStar ? 1 : 0); i < 5; i++) {
-            starsHTML += '<span class="star" style="color: #ddd;">☆</span>';
-        }
-        
-        starsHTML += '</div>';
+        starsHTML += '</div>'; //close dive tag to complete html
         return starsHTML;
     }
 }
 
-/* =================================================================
-   USER INTERACTION HANDLERS
-   These functions handle button clicks and user context changes
-   ================================================================= */
 
-/**
- * Handle poster selection clicks (premium feature)
- */
+//handle poster selction functions
+
 function selectPoster(selectedPoster) {
-    // Remove selection from all posters in this card
-    const posterOptions = selectedPoster.parentElement.querySelectorAll('.poster-option');
-    posterOptions.forEach(option => option.classList.remove('selected'));
     
-    // Add selection to clicked poster
-    selectedPoster.classList.add('selected');
-    
-    // Update the main poster image
-    const movieCard = selectedPoster.closest('.movie-card');
-    const mainPoster = movieCard.querySelector('.movie-poster');
-    mainPoster.src = selectedPoster.src;
-    
-    console.log('🖼️ Poster selection changed');
+    const posterOptions = selectedPoster.parentElement.querySelectorAll('.poster-option');//grab all the poster options in the same movie card as the one that got clicked
 
-    if (ldClient) {
+    posterOptions.forEach(option => option.classList.remove('selected')); //remove the higihlight from all posers
+    
+    selectedPoster.classList.add('selected'); //but then add it back to whichever poster was selected
+    
+    const movieCard = selectedPoster.closest('.movie-card'); //grab the movie card that contains this posetr
+    
+    const mainPoster = movieCard.querySelector('.movie-poster'); //find the main poster image for this movie
+    
+    mainPoster.src = selectedPoster.src; //set the main poster to show the same image as the option selected
+    
+    console.log('Poster selection has been changed');
 
-        ldClient.track('poster-clicked', currentUser);
+    if (ldClient) { //if connexted
+
+        ldClient.track('poster-clicked', currentUser); //track and tell LD this user clicked a poster - for experimentation 
+        
         console.log('Poster click tracked for experiment');
 
     }
 }
 
-/**
- * Toggle user subscription between basic and premium
- * This demonstrates LaunchDarkly's user targeting capabilities
- */
-function toggleUser() {
-    // Switch user subscription status
-    if (currentUser.subscription === 'basic') {
-        currentUser.subscription = 'premium';
-        document.getElementById('user-status').textContent = 'Premium User';
-        document.getElementById('toggle-user').textContent = 'Switch to Basic';
-    } else {
-        currentUser.subscription = 'basic';
-        document.getElementById('user-status').textContent = 'Basic User';
+
+//toggle between basic and premium
+function toggleUser() { 
+
+    if (currentUser.subscription === 'basic') { //if user is basic
+
+        currentUser.subscription = 'premium'; //set it to premium 
+
+        document.getElementById('user-status').textContent = 'Premium User'; //update ui text for premium
+
+        document.getElementById('toggle-user').textContent = 'Switch to Basic'; //update ui
+    
+    } else { //if premium
+
+        currentUser.subscription = 'basic'; //switch to basic 
+
+        document.getElementById('user-status').textContent = 'Basic User'; //update both ui to match basic sub ui
         document.getElementById('toggle-user').textContent = 'Switch to Premium';
     }
     
-    console.log(`👤 User subscription updated: ${currentUser.subscription}`);
+    console.log(` User subscription updated: ${currentUser.subscription}`);
     
-    // Update LaunchDarkly with new user context for targeting
-    if (ldClient) {
-        ldClient.identify(currentUser);
+    
+
+    if (ldClient) { //if still connected let LD 
+
+        ldClient.identify(currentUser); //tell LD user info is updated , ake sure target rules still algin
     }
-    
-    // Update UI based on new user context
-    // updatePosterSelection();
+
+    //reload the movies to keep up w immediate change
     renderMovies();
 }
 
-/**
- * Handle view button clicks (for manual testing)
- * Note: In real demo, these views are controlled by feature flags
- */
-function setGridView() {
-    console.log('📱 Manual grid view selected');
-    // In a real scenario, this would update the flag in LaunchDarkly
-    // For demo purposes, we can manually trigger the layout change
+//empty placeholders for the grid buttons
+function setGridView() { //func to call when someone clicks the grid button
+
+    console.log('Manual grid view selected');
+    // THESE dont do anything but show that these would be used to change the layout if we werent using flags
+    //started with these but its better to show that the flags will control instead of buttons in a different way 
+
 }
 
 function setListView() {
-    console.log('📱 Manual list view selected');
-    // In a real scenario, this would update the flag in LaunchDarkly
-    // For demo purposes, we can manually trigger the layout change
+
+    console.log('Manual list view selected');
+    //same as above
 }
 
-/* =================================================================
-   APPLICATION INITIALIZATION
-   Set up event listeners and start the application
-   ================================================================= */
+//this is to start the app
 
-// Wait for the DOM to be fully loaded before initializing
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('🎬 CineFlag Movie Demo Starting...');
+document.addEventListener('DOMContentLoaded', function() { //wait until webpage is fully loaded before runnnig code, 
+
+    console.log('ReelBook Loading...');
     
-    // Set up event listeners for user interactions
-    document.getElementById('toggle-user').addEventListener('click', toggleUser);
-    document.getElementById('grid-view').addEventListener('click', setGridView);
-    document.getElementById('list-view').addEventListener('click', setListView);
     
-    // Initialize LaunchDarkly and start the application
-    initializeLaunchDarkly();
+    document.getElementById('toggle-user').addEventListener('click', toggleUser); //whens omeone clicks toggle user call function to switch users
+    document.getElementById('grid-view').addEventListener('click', setGridView); //when someoe clicks grid view run grid view function technically just a msg but to know it works 
+    document.getElementById('list-view').addEventListener('click', setListView); //same but for list view
+    
+    initializeLaunchDarkly(); //start up LD and connect to projext
 });
 
-// Log successful script loading
-console.log('📄 movieFlags.js loaded successfully');
+console.log('movieFlags.js loaded successfully');
